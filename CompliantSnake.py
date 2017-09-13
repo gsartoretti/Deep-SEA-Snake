@@ -41,7 +41,7 @@ LR_C                    = 0.001    # learning rate for critic
 GLOBAL_REWARD           = []
 GLOBAL_EP               = 5000
 N_WORKERS               = 6 #should =multiprocessing.cpu_count()
-model_path              = './model_tensorboard'
+model_path              = './model_offlineA3C'
 s_size                  = 7
 a_size                  = 9
 load_model              = True
