@@ -9,7 +9,7 @@ Database used for offline learning and videos of the results:
 - CompliantSnake0.py: State of the art compliant controller with 6 windows - used to
   generate offline data.
 - CompliantSnake.py: Snake controller running the learned model stored in
-  "model_tensorboard"
+  "model_offlineA3C"
 - Results: Videos and Optitrack logs of trial runs, and scripts to plot the
   results.
 - A3C.ipnyb: IPython notebook which runs the A3C algorithm with 6 workers
