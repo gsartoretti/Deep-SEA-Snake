@@ -19,9 +19,6 @@ Database used for offline learning and videos of the results:
 - Tensorflow
 - matplotlib
 
-If necessary, the file "requirements.txt" contains a pip freeze of the
-current working project.
-
 **Note: The module "hebiapi" is currently not publicly available, but it is
 only used for sending and recieving low-level joint information to the
 robot.
