@@ -33,9 +33,6 @@ snake.setGains(gains)
 
 snake.setFeedbackFrequency(200)
 
-# joystick stuff would go here if we had it
-
-
 # Set up parameters for SEA Snake
 snakeConst.numModules     = 16
 snakeConst.numWaves       = 1.5
@@ -100,11 +97,9 @@ dt                        = pi / 160
 snakeCompl.offset      = np.zeros((numWindows, 1))
 
 commanded_angles       = get_NewAngles2D(snakeCompl, snakeConst, windows)[0]
-## cmd.position           = changeUnifiedToSEA(snakeData,1.7*np.transpose(commanded_angles))
 ## no need to flip
 cmd.position	       = (1.7 * np.transpose(commanded_angles))
 
-###
 if continue_ep:
     import pickle
     with open('runData.snake', 'rb') as file:
@@ -124,7 +119,6 @@ snake.setAngles(cmd.position, send = False)
 
 TzOffset = commanded_angles[1] / 2
 
-##snake.set(cmd); -> snake.sendCommand()
 snake.sendCommand()
 ##
 
@@ -137,8 +131,6 @@ try:
     while True: ## press Ctrl-C to stop
         tic = time.clock()
 
-## joystick stuff goes here
-
         forward = 1
 
         index = 1
@@ -147,23 +139,9 @@ try:
             index = index + 1
         windows.steerIndex = index
 
-## getting feedback is different with python API
-        '''
-        fbk =snake.getNextFeedback();
-        while isempty(fbk)
-            display('No Feedback... :-(');
-            fbk = snake.getNextFeedback();
-        end
-        '''
-##
-## Omitting "Guillaume's crap"
-
         snakeNom.scale          = forward
         t                       = t + dt
 
-## dummy torques for testing
-##np.array([0.0331,-0.1629,0.0738,0.0168,-0.0363,0.1086,-0.0574,0.0488,-0.0201,-0.0043,0.1487,0.0890,-0.2515,0.2325,-0.1007,0.2780])
-##
         tau_Ext                 = snake.getTorques() ## torque should be automatically converted to unified
         tau_Applied             = get_AppliedForce2D(tau_Ext, snakeConst, snakeCompl, windows)
         snakeCompl, snakeNom    = get_NewNomParam2D(snakeCompl, snakeNom, snakeConst, windows, tau_Applied, dt)

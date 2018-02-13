@@ -73,9 +73,6 @@ snake.setGains(gains)
 
 snake.setFeedbackFrequency(200)
 
-# joystick stuff would go here if we had it
-
-
 # Set up parameters for SEA Snake
 snakeConst.numModules     = 16
 snakeConst.numWaves       = 1.5
@@ -139,12 +136,9 @@ dt                        = TIME_FACTOR * pi / 160 # CHANGED
 snakeCompl.offset      = np.zeros((numWindows, 1))
 
 commanded_angles       = get_NewAngles2D(snakeCompl, snakeConst, windows)[0]
-## cmd.position           = changeUnifiedToSEA(snakeData,1.7*np.transpose(commanded_angles))
-## no need to flip
 cmd.position           = (1.9 * np.transpose(commanded_angles))
 
 snake.setAngles(cmd.position, send = False)
-##snake.set(cmd); -> snake.sendCommand()
 snake.sendCommand()
 
 ## Class Actor and Critic network
@@ -173,9 +167,9 @@ class ACNet(object):
                 with tf.name_scope('a_loss'):
                     log_prob = tf.reduce_sum(tf.log(self.a_prob) * tf.one_hot(self.a_his, a_size, dtype=tf.float32), axis=1, keep_dims=True)
                     exp_v = log_prob * td
-                    #Found someone use entropy to encourage exploration
+                    #Found someone using entropy to encourage exploration
                     #larger entropy means more stochastic actions
-                    entropy = -tf.reduce_sum(self.a_prob * tf.log(self.a_prob), axis=1, keep_dims=True)  # encourage exploration
+                    entropy = -tf.reduce_sum(self.a_prob * tf.log(self.a_prob), axis=1, keep_dims=True)
                     self.exp_v = ENTROPY_BETA * entropy + exp_v
                     self.a_loss = tf.reduce_mean(-self.exp_v)
 
@@ -199,16 +193,15 @@ class ACNet(object):
     def _build_net(self):
         w_init = tf.random_normal_initializer(0., .1)
         with tf.variable_scope('actor'):
-            #dense layer is normal NN,see: https://www.tensorflow.org/api_docs/python/tf/layers/dense
             layer4 = tf.layers.dense(self.s, a_size, tf.nn.relu6, kernel_initializer=w_init, name='layer4')
             layer3 = tf.layers.dense(layer4, a_size, tf.nn.relu6, kernel_initializer=w_init, name='layer3')
             layer2 = tf.layers.dense(layer3, a_size, tf.nn.relu6, kernel_initializer=w_init, name='layer2')
             a_prob = tf.layers.dense(layer2, a_size, tf.nn.softmax, kernel_initializer=w_init, name='ap')
         with tf.variable_scope('critic'):
-            v4 = tf.layers.dense(self.s, 1, tf.nn.relu6, kernel_initializer=w_init, name='v4')#relu6 is better than relu
-            v3 = tf.layers.dense(v4, 1, tf.nn.relu6, kernel_initializer=w_init, name='v3')#relu6 is better than relu
-            v2 = tf.layers.dense(v3, 1, tf.nn.relu6, kernel_initializer=w_init, name='v2')#relu6 is better than relu
-            v = tf.layers.dense(v2, 1, tf.nn.relu6, kernel_initializer=w_init, name='v')#relu6 is better than relu
+            v4 = tf.layers.dense(self.s, 1, tf.nn.relu6, kernel_initializer=w_init, name='v4')
+            v3 = tf.layers.dense(v4, 1, tf.nn.relu6, kernel_initializer=w_init, name='v3')
+            v2 = tf.layers.dense(v3, 1, tf.nn.relu6, kernel_initializer=w_init, name='v2')
+            v = tf.layers.dense(v2, 1, tf.nn.relu6, kernel_initializer=w_init, name='v')
         return a_prob, v
 
     def update_global(self, feed_dict):  # run by a local
@@ -381,11 +374,6 @@ if __name__ == "__main__":
         th.start()
         worker_threads.append(th)
 
-    #initialize stuff
-    ## Python API
-
-    ##
-
     spFreqs = []
     amps    = []
 
@@ -399,32 +387,16 @@ if __name__ == "__main__":
         while True: ## press Ctrl-C to stop
             tic = time.perf_counter()
 
-        ## joystick stuff goes here
-
             forward = 1
 
             index = 1
             while (windows.offset[index][1] < 0):
                 index = index + 1
 
-        ## getting feedback is different with python API
-            '''
-            fbk =snake.getNextFeedback();
-            while isempty(fbk)
-            display('No Feedback... :-(');
-            fbk = snake.getNextFeedback();
-            end
-            '''
-        ##
-        ## Omitting "Guillaume's crap"
-
             snakeNom.scale          = forward
             t                      += 1
 
             reward, (currentpos, oldpos) = rewardData.getReward()
-            #if t % UPDATE_GLOBAL_ITER == 0:
-                #print('Resetting Origin')
-                #rewardData.setOrigin()
             tau_Ext                 = snake.getTorques() ## torque should be automatically converted to unified
             tau_Applied             = get_AppliedForce2D(tau_Ext, snakeConst, snakeCompl, windows)
             global thread_feedback
@@ -453,25 +425,16 @@ if __name__ == "__main__":
             snake.setAngles(cmd.position.transpose(),send= False)
             snake.sendCommand()
 
-            #amps.append(snakeCompl.amp)
-            #spFreqs.append(snakeCompl.spFreq)
-
             current_time = time.perf_counter() - tic
             log.logData(tau_Ext, tau_Applied, dsigmaD, thread_feedback, snakeNom, snakeCompl, windows, commanded_angles, current_time, reward, oldpos, currentpos)
             if current_time > dt:
                 print(t*dt, snakeCompl.phi, snakeCompl.amp, snakeCompl.spFreq, reward, end='\n')
-#            time.sleep(max(0,dt-current_time))
-    except KeyboardInterrupt:
-        # saver.save(SESS, model_path+'/model-'+str(GLOBAL_EP)+'.cptk')
-        # print ("Saved Model")
 
+    except KeyboardInterrupt:
         with open('runData.snake', 'wb') as file:
             data = {}
-            #data['amps'] = amps
-            #data['spFreqs'] = spFreqs
             data['GLOBAL_EP'] = GLOBAL_EP
             pickle.dump(data, file)
-        #shutil.copyfile('runData.snake', 'ExperimentsOff/runData-%i.snake'%(GLOBAL_EP))
         log.saveData()
         print('\nI am CompliantSnake.py and I saved things.')
 
@@ -482,10 +445,6 @@ if __name__ == "__main__":
             w.shouldDie = True
         time.sleep(0.2)
         groupLock.release(0,'main')
-
-        #cap.release()
-        #out.release()
-        #cv2.destroyAllWindows()
 
         print('You can Ctrl-C now...')
         sys.exit()
